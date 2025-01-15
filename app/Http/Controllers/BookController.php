@@ -2,64 +2,89 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreBookRequest;
+use App\Http\Requests\UpdateBookRequest;
+use App\Models\Author;
 use App\Models\Book;
-use Illuminate\Http\Request;
 
 class BookController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        //
+        $title = "Book";
+
+        $authors = Author::select("id", "name")->get();
+        $books = Book::select("id", "title", "serial_number", "published_at", "author_id")
+            ->with('author')
+            ->paginate(5);
+
+        return view("Book.index", compact("title", "authors", "books"));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function store(StoreBookRequest $request)
     {
-        //
+        try {
+            $book = Book::create($request->validated());
+            $book->load('author');
+
+            return response()->json(['success' => true, 'book' => $book]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'error' => 'Terjadi kesalahan saat memperbarui buku: ' . $th->getMessage()
+            ], 500);
+        }
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function show($id)
     {
-        //
+        $book = Book::findOrFail($id);
+
+        return response()->json($book);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Book $book)
+    public function update(UpdateBookRequest $request, $id)
     {
-        //
+        $book = Book::findOrFail($id);
+
+        if (!$book) {
+            return response()->json([
+                'error' => 'Buku tidak ditemukan.',
+            ], 404);
+        }
+
+        try {
+            $book->title = $request->title_edit;
+            $book->serial_number = $request->serial_number_edit;
+            $book->published_at = $request->published_at_edit;
+            $book->author_id = $request->author_id_edit;
+            $book->update();
+
+            return response()->json(['success' => true, 'book' => $book]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'error' => 'Terjadi kesalahan saat memperbarui buku: ' . $th->getMessage()
+            ], 500);
+        }
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Book $book)
+    public function destroy($id)
     {
-        //
-    }
+        $book = Book::findOrFail($id);
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Book $book)
-    {
-        //
-    }
+        if (!$book) {
+            return response()->json([
+                'error' => 'Buku tidak ditemukan.',
+            ], 404);
+        }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Book $book)
-    {
-        //
+        try {
+            $book->delete();
+
+            return response()->json(['success' => true, 'id' => $id]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'error' => 'Terjadi kesalahan saat memperbarui buku: ' . $th->getMessage()
+            ], 500);
+        }
     }
 }

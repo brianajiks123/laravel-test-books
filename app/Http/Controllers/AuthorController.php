@@ -2,64 +2,82 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreAuthorRequest;
+use App\Http\Requests\UpdateAuthorRequest;
 use App\Models\Author;
-use Illuminate\Http\Request;
 
 class AuthorController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        //
+        $title = "Author";
+
+        $authors = Author::select("id", "name", "email")->paginate(5);
+
+        return view("Author.index", compact("title", "authors"));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function store(StoreAuthorRequest $request)
     {
-        //
+        try {
+            $author = Author::create($request->validated());
+
+            return response()->json(['success' => true, 'author' => $author]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'error' => 'Terjadi kesalahan saat memperbarui pengarang: ' . $th->getMessage()
+            ], 500);
+        }
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function show($id)
     {
-        //
+        $author = Author::findOrFail($id);
+
+        return response()->json($author);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Author $author)
+    public function update(UpdateAuthorRequest $request, $id)
     {
-        //
+        $author = Author::findOrFail($id);
+
+        if (!$author) {
+            return response()->json([
+                'error' => 'Pengarang tidak ditemukan.',
+            ], 404);
+        }
+
+        try {
+            $author->name = $request->name_edit;
+            $author->email = $request->email_edit;
+            $author->update();
+
+            return response()->json(['success' => true, 'author' => $author]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'error' => 'Terjadi kesalahan saat memperbarui pengarang: ' . $th->getMessage()
+            ], 500);
+        }
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Author $author)
+    public function destroy($id)
     {
-        //
-    }
+        $author = Author::findOrFail($id);
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Author $author)
-    {
-        //
-    }
+        if (!$author) {
+            return response()->json([
+                'error' => 'Pengarang tidak ditemukan.',
+            ], 404);
+        }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Author $author)
-    {
-        //
+        try {
+            $author->delete();
+
+            return response()->json(['success' => true, 'id' => $id]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'error' => 'Terjadi kesalahan saat memperbarui pengarang: ' . $th->getMessage()
+            ], 500);
+        }
     }
 }
