@@ -58,7 +58,7 @@
         {{-- Modal: Edit Book --}}
         <div id="modal_edit" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden items-center justify-center z-50">
             <div class="bg-white p-6 rounded-lg w-full max-w-md">
-                <h2 class="text-xl font-semibold mb-4" id="edit_modal_title">Edit Pengarang</h2>
+                <h2 class="text-xl font-semibold mb-4" id="edit_modal_title">Edit Buku</h2>
 
                 <form id="edit_book_form">
                     <input type="hidden" id="book_id_edit" name="id">

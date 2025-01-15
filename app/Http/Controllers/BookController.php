@@ -59,6 +59,8 @@ class BookController extends Controller
             $book->author_id = $request->author_id_edit;
             $book->update();
 
+            $book->load('author');
+
             return response()->json(['success' => true, 'book' => $book]);
         } catch (\Throwable $th) {
             return response()->json([
