@@ -133,8 +133,6 @@
 
         const addSubmitButton = $('#add_submit_btn');
         const editSubmitButton = $('#edit_submit_btn');
-        const editAuthorButtons = document.querySelectorAll('#edit_author_btn');
-        const deleteAuthorButtons = document.querySelectorAll('#delete_author_btn');
 
         const addNameError = $('#name_add_error');
         const addEmailError = $('#email_add_error');
@@ -266,29 +264,24 @@
         });
 
         // Edit
-        editAuthorButtons.forEach(button => {
-            button.addEventListener('click', function(e) {
-                e.preventDefault();
+        $('#author_table').on('click', '[data-id]:has(i.fa-pencil)', function(e) {
+            const authorId = $(this).data('id');
 
-                const authorId = this.getAttribute('data-id');
+            fetch(`/authors/${authorId}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('name_edit').value = data.name;
+                    document.getElementById('email_edit').value = data.email;
+                    document.getElementById('author_id_edit').value = data.id;
 
-                fetch(`/authors/${authorId}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        document.getElementById('name_edit').value = data.name;
-                        document.getElementById('email_edit').value = data.email;
-                        document.getElementById('author_id_edit').value = data.id;
-
-                        document.getElementById('modal_edit').classList.remove('hidden');
-
-                        editSubmitButton.text('Update');
-                        editModal.classList.remove('hidden');
-                        editModal.classList.add('flex');
-                    })
-                    .catch(error => {
-                        console.error('Error fetching author data:', error);
-                    });
-            });
+                    document.getElementById('modal_edit').classList.remove('hidden');
+                    editSubmitButton.text('Update');
+                    editModal.classList.remove('hidden');
+                    editModal.classList.add('flex');
+                })
+                .catch(error => {
+                    console.error('Error fetching author data:', error);
+                });
         });
 
         // Update
@@ -338,52 +331,39 @@
         });
 
         // Delete
-        deleteAuthorButtons.forEach(button => {
-            button.addEventListener('click', function(event) {
-                const authorId = this.getAttribute('data-id');
-                const url = this.getAttribute('data-url');
+        $('#author_table').on('click', '[data-id]:has(i.fa-trash)', function(event) {
+            const authorId = $(this).data('id');
+            const url = $(this).data('url');
 
-                if (confirm('Yakin menghapus pengarang ini?')) {
-                    fetch(url, {
-                            method: 'DELETE',
-                            headers: {
-                                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr(
-                                    'content'),
-                                'Accept': 'application/json',
-                            }
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                const authorRow = document.querySelector(`#author-${authorId}`);
+            if (confirm('Yakin menghapus pengarang ini?')) {
+                fetch(url, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                        'Accept': 'application/json',
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const authorRow = document.querySelector(`#author-${authorId}`);
 
-                                if (authorRow) {
-                                    authorRow.remove();
-                                }
+                        if (authorRow) {
+                            authorRow.remove();
+                        }
 
-                                const remainingRows = document.querySelectorAll('#author_table tbody tr');
+                        const remainingRows = document.querySelectorAll('#author_table tbody tr');
 
-                                if (remainingRows.length === 0) {
-                                    const emptyRow = `
-                                        <tr>
-                                            <td colspan="4" class="text-center italic">Data pengarang kosong!</td>
-                                        </tr>
-                                    `;
-
-                                    $('#author_table tbody').append(emptyRow);
-                                }
-
-                                alert('Pengarang berhasil dihapus');
-                            } else {
-                                alert('Gagal menghapus pengarang');
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error:', error);
-                            alert('Terjadi kesalahan saat menghapus pengarang');
-                        });
-                }
-            });
+                        alert('Pengarang berhasil dihapus');
+                    } else {
+                        alert('Gagal menghapus pengarang');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Terjadi kesalahan saat menghapus pengarang');
+                });
+            }
         });
     });
 </script>

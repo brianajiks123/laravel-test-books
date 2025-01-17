@@ -313,38 +313,34 @@
         });
 
         // Edit
-        editBookButtons.forEach(button => {
-            button.addEventListener('click', function(e) {
-                e.preventDefault();
+        $('#book_table').on('click', '[data-id]:has(i.fa-pencil)', function(e) {
+            const bookId = this.getAttribute('data-id');
 
-                const bookId = this.getAttribute('data-id');
+            fetch(`/books/${bookId}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('title_edit').value = data.title;
+                    document.getElementById('serial_number_edit').value = data.serial_number;
+                    document.getElementById('publish_edit').value = data.published_at;
+                    document.getElementById('book_id_edit').value = data.id;
 
-                fetch(`/books/${bookId}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        document.getElementById('title_edit').value = data.title;
-                        document.getElementById('serial_number_edit').value = data.serial_number;
-                        document.getElementById('publish_edit').value = data.published_at;
-                        document.getElementById('book_id_edit').value = data.id;
+                    const authorSelect = document.getElementById('author_edit');
 
-                        const authorSelect = document.getElementById('author_edit');
-
-                        for (let option of authorSelect.options) {
-                            if (option.value == data.author_id) {
-                                option.selected = true;
-                            }
+                    for (let option of authorSelect.options) {
+                        if (option.value == data.author_id) {
+                            option.selected = true;
                         }
+                    }
 
-                        document.getElementById('modal_edit').classList.remove('hidden');
+                    document.getElementById('modal_edit').classList.remove('hidden');
 
-                        editSubmitButton.text('Update');
-                        editModal.classList.remove('hidden');
-                        editModal.classList.add('flex');
-                    })
-                    .catch(error => {
-                        console.error('Error fetching book data:', error);
-                    });
-            });
+                    editSubmitButton.text('Update');
+                    editModal.classList.remove('hidden');
+                    editModal.classList.add('flex');
+                })
+                .catch(error => {
+                    console.error('Error fetching book data:', error);
+                });
         });
 
         // Update
@@ -401,52 +397,38 @@
         });
 
         // Delete
-        deleteBookButtons.forEach(button => {
-            button.addEventListener('click', function(event) {
-                const bookId = this.getAttribute('data-id');
-                const url = this.getAttribute('data-url');
+        $('#book_table').on('click', '[data-id]:has(i.fa-trash)', function(event) {
+            const bookId = this.getAttribute('data-id');
+            const url = this.getAttribute('data-url');
 
-                if (confirm('Yakin menghapus buku ini?')) {
-                    fetch(url, {
-                            method: 'DELETE',
-                            headers: {
-                                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr(
-                                    'content'),
-                                'Accept': 'application/json',
+            if (confirm('Yakin menghapus buku ini?')) {
+                fetch(url, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr(
+                                'content'),
+                            'Accept': 'application/json',
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            const bookRow = document.querySelector(`#book-${bookId}`);
+
+                            if (bookRow) {
+                                bookRow.remove();
                             }
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                const bookRow = document.querySelector(`#book-${bookId}`);
 
-                                if (bookRow) {
-                                    bookRow.remove();
-                                }
-
-                                const remainingRows = document.querySelectorAll('#author_table tbody tr');
-
-                                if (remainingRows.length === 0) {
-                                    const emptyRow = `
-                                        <tr>
-                                            <td colspan="6" class="text-center italic">Data buku kosong!</td>
-                                        </tr>
-                                    `;
-
-                                    $('#book_table tbody').append(emptyRow);
-                                }
-
-                                alert('Buku berhasil dihapus');
-                            } else {
-                                alert('Gagal menghapus buku');
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error:', error);
-                            alert('Terjadi kesalahan saat menghapus buku');
-                        });
-                }
-            });
+                            alert('Buku berhasil dihapus');
+                        } else {
+                            alert('Gagal menghapus buku');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Terjadi kesalahan saat menghapus buku');
+                    });
+            }
         });
     });
 </script>
