@@ -17,6 +17,9 @@ class Book extends Model
     // Relations
     public function author(): BelongsTo
     {
-        return $this->belongsTo(Author::class);
+        return $this->belongsTo(Author::class)->withDefault([
+            "name" => "",
+            "email" => "",
+        ]);
     }
 }

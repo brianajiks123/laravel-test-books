@@ -84,7 +84,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach ($authors as $key => $author)
+                    @forelse ($authors as $key => $author)
                         <tr class="hover:bg-gray-50" id="author-{{ $author->id }}">
                             <td class="border px-4 py-2">
                                 {{ $key + 1 + ($authors->currentPage() - 1) * $authors->perPage() }}</td>
@@ -105,7 +105,11 @@
                                 </button>
                             </td>
                         </tr>
-                    @endforeach
+                    @empty
+                        <tr>
+                            <td colspan="6" class="text-center italic">Data pengarang kosong!</td>
+                        </tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>
@@ -134,7 +138,7 @@
 
         const addNameError = $('#name_add_error');
         const addEmailError = $('#email_add_error');
-        
+
         const editNameError = $('#name_edit_error');
         const editEmailError = $('#email_edit_error');
 
@@ -203,6 +207,14 @@
                 contentType: false,
                 success: function(response) {
                     if (response.success) {
+                        addAuthorForm[0].reset();
+
+                        const emptyRow = $('#author_table tbody tr:contains("Data pengarang kosong!")');
+
+                        if (emptyRow.length > 0) {
+                            emptyRow.remove();
+                        }
+
                         const newRow = `
                             <tr class="hover:bg-gray-50" id="author-${response.author.id}">
                                 <td class="border px-4 py-2">${response.author.id}</td>
@@ -224,16 +236,14 @@
                             </tr>
                         `;
 
-                        $('#author_table tbody').append(
-                            newRow);
-                        
-                        successMessage.text('Pengarang berhasil ditambahkan').removeClass(
-                            'hidden');
+                        $('#author_table tbody').append(newRow);
+
+                        successMessage.text('Pengarang berhasil ditambahkan').removeClass('hidden');
 
                         setTimeout(function() {
                             successMessage.addClass('hidden');
                         }, 3000);
-                        
+
                         addModal.classList.add('hidden');
                     }
                 },
@@ -249,8 +259,7 @@
                     }
 
                     if (response.responseJSON.error) {
-                        errorMessage.text(response.responseJSON.error).removeClass(
-                            'hidden');
+                        errorMessage.text(response.responseJSON.error).removeClass('hidden');
                     }
                 }
             });
@@ -294,22 +303,19 @@
                 data: formData,
                 success: function(response) {
                     if (response.success) {
-                        const updatedRow = document.querySelector(
-                            `#author-${response.author.id}`);
+                        const updatedRow = document.querySelector(`#author-${response.author.id}`);
+
                         if (updatedRow) {
-                            updatedRow.querySelector('td:nth-child(2)').textContent =
-                                response.author.name;
-                            updatedRow.querySelector('td:nth-child(3)').textContent =
-                                response.author.email;
+                            updatedRow.querySelector('td:nth-child(2)').textContent = response.author.name;
+                            updatedRow.querySelector('td:nth-child(3)').textContent = response.author.email;
                         }
 
-                        successMessage.text('Pengarang berhasil diperbarui').removeClass(
-                            'hidden');
+                        successMessage.text('Pengarang berhasil diperbarui').removeClass('hidden');
 
                         setTimeout(function() {
                             successMessage.addClass('hidden');
                         }, 3000);
-                        
+
                         editModal.classList.add('hidden');
                     }
                 },
@@ -325,8 +331,7 @@
                     }
 
                     if (response.responseJSON.error) {
-                        errorMessage.text(response.responseJSON.error).removeClass(
-                            'hidden');
+                        errorMessage.text(response.responseJSON.error).removeClass('hidden');
                     }
                 }
             });
@@ -350,11 +355,24 @@
                         .then(response => response.json())
                         .then(data => {
                             if (data.success) {
-                                const authorRow = document.querySelector(
-                                    `#author-${authorId}`);
+                                const authorRow = document.querySelector(`#author-${authorId}`);
+
                                 if (authorRow) {
                                     authorRow.remove();
                                 }
+
+                                const remainingRows = document.querySelectorAll('#author_table tbody tr');
+
+                                if (remainingRows.length === 0) {
+                                    const emptyRow = `
+                                        <tr>
+                                            <td colspan="4" class="text-center italic">Data pengarang kosong!</td>
+                                        </tr>
+                                    `;
+
+                                    $('#author_table tbody').append(emptyRow);
+                                }
+
                                 alert('Pengarang berhasil dihapus');
                             } else {
                                 alert('Gagal menghapus pengarang');

@@ -29,7 +29,7 @@
                     </div>
 
                     <div class="mb-4">
-                        <label for="publish_add" class="block text-sm font-medium text-gray-700">Tanngal Publish</label>
+                        <label for="publish_add" class="block text-sm font-medium text-gray-700">Tanngal Publikasi</label>
                         <input type="date" id="publish_add" name="published_at"
                             class="w-full px-3 py-2 border border-gray-300 rounded mt-1" autocomplete="true">
                         <small id="publish_add_error" class="text-red-500 hidden"></small>
@@ -77,7 +77,7 @@
                     </div>
 
                     <div class="mb-4">
-                        <label for="publish_edit" class="block text-sm font-medium text-gray-700">Tanngal Publish</label>
+                        <label for="publish_edit" class="block text-sm font-medium text-gray-700">Tanngal Publikasi</label>
                         <input type="date" id="publish_edit" name="published_at_edit"
                             class="w-full px-3 py-2 border border-gray-300 rounded mt-1" autocomplete="true">
                         <small id="publish_edit_error" class="text-red-500 hidden"></small>
@@ -120,7 +120,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach ($books as $key => $book)
+                    @forelse ($books as $key => $book)
                         <tr class="hover:bg-gray-50" id="book-{{ $book->id }}">
                             <td class="border px-4 py-2">
                                 {{ $key + 1 + ($books->currentPage() - 1) * $books->perPage() }}</td>
@@ -143,7 +143,11 @@
                                 </button>
                             </td>
                         </tr>
-                    @endforeach
+                    @empty
+                        <tr>
+                            <td colspan="6" class="text-center italic">Data buku kosong!</td>
+                        </tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>
@@ -173,12 +177,10 @@
         const addTitleError = $('#title_add_error');
         const addSNError = $('#serial_number_add_error');
         const addPublishError = $('#publish_add_error');
-        const addAuthorError = $('#author_add_error');
 
         const editTitleError = $('#titleedit_error');
         const editSNError = $('#serial_number_edit_error');
         const editPublishError = $('#publish_edit_error');
-        const editAuthorError = $('#author_edit_error');
 
         const successMessage = $('#success_msg');
         const errorMessage = $('#error_msg');
@@ -228,7 +230,6 @@
             addTitleError.addClass('hidden');
             addSNError.addClass('hidden');
             addPublishError.addClass('hidden');
-            addAuthorError.addClass('hidden');
             successMessage.addClass('hidden');
             errorMessage.addClass('hidden');
 
@@ -247,6 +248,14 @@
                 contentType: false,
                 success: function(response) {
                     if (response.success) {
+                        addBookForm[0].reset();
+
+                        const emptyRow = $('#book_table tbody tr:contains("Data buku kosong!")');
+
+                        if (emptyRow.length > 0) {
+                            emptyRow.remove();
+                        }
+
                         const newRow = `
                             <tr class="hover:bg-gray-50" id="book-${response.book.id}">
                                 <td class="border px-4 py-2">${response.book.id}</td>
@@ -270,11 +279,9 @@
                             </tr>
                         `;
 
-                        $('#book_table tbody').append(
-                            newRow);
+                        $('#book_table tbody').append(newRow);
 
-                        successMessage.text('Buku berhasil ditambahkan').removeClass(
-                            'hidden');
+                        successMessage.text('Buku berhasil ditambahkan').removeClass('hidden');
 
                         setTimeout(function() {
                             successMessage.addClass('hidden');
@@ -286,17 +293,20 @@
                 error: function(response) {
                     const errors = response.responseJSON.errors;
 
-                    if (errors.name) {
-                        addTitleError.text(errors.name[0]).removeClass('hidden');
+                    if (errors.title) {
+                        addTitleError.text(errors.title[0]).removeClass('hidden');
                     }
 
-                    if (errors.email) {
-                        addSNError.text(errors.email[0]).removeClass('hidden');
+                    if (errors.serial_number) {
+                        addSNError.text(errors.serial_number[0]).removeClass('hidden');
+                    }
+
+                    if (errors.published_at) {
+                        addPublishError.text(errors.published_at[0]).removeClass('hidden');
                     }
 
                     if (response.responseJSON.error) {
-                        errorMessage.text(response.responseJSON.error).removeClass(
-                            'hidden');
+                        errorMessage.text(response.responseJSON.error).removeClass('hidden');
                     }
                 }
             });
@@ -313,12 +323,12 @@
                     .then(response => response.json())
                     .then(data => {
                         document.getElementById('title_edit').value = data.title;
-                        document.getElementById('serial_number_edit').value = data
-                            .serial_number;
+                        document.getElementById('serial_number_edit').value = data.serial_number;
                         document.getElementById('publish_edit').value = data.published_at;
                         document.getElementById('book_id_edit').value = data.id;
 
                         const authorSelect = document.getElementById('author_edit');
+
                         for (let option of authorSelect.options) {
                             if (option.value == data.author_id) {
                                 option.selected = true;
@@ -353,19 +363,13 @@
                             `#book-${response.book.id}`);
 
                         if (updatedRow) {
-                            updatedRow.querySelector('td:nth-child(2)').textContent =
-                                response.book.title;
-                            updatedRow.querySelector('td:nth-child(3)').textContent =
-                                response.book.serial_number;
-                            updatedRow.querySelector('td:nth-child(4)').textContent =
-                                response.book.published_at;
-                            updatedRow.querySelector('td:nth-child(5)').textContent =
-                                response.book.author ? response.book.author.name :
-                                'Unknown';
+                            updatedRow.querySelector('td:nth-child(2)').textContent = response.book.title;
+                            updatedRow.querySelector('td:nth-child(3)').textContent = response.book.serial_number;
+                            updatedRow.querySelector('td:nth-child(4)').textContent = response.book.published_at;
+                            updatedRow.querySelector('td:nth-child(5)').textContent = response.book.author ? response.book.author.name : 'Unknown';
                         }
 
-                        successMessage.text('Buku berhasil diperbarui').removeClass(
-                            'hidden');
+                        successMessage.text('Buku berhasil diperbarui').removeClass('hidden');
 
                         setTimeout(function() {
                             successMessage.addClass('hidden');
@@ -377,17 +381,20 @@
                 error: function(response) {
                     const errors = response.responseJSON.errors;
 
-                    if (errors.name) {
-                        addTitleError.text(errors.name[0]).removeClass('hidden');
+                    if (errors.title) {
+                        editTitleError.text(errors.title[0]).removeClass('hidden');
                     }
 
-                    if (errors.email) {
-                        addSNError.text(errors.email[0]).removeClass('hidden');
+                    if (errors.serial_number) {
+                        editSNError.text(errors.serial_number[0]).removeClass('hidden');
+                    }
+
+                    if (errors.published_at) {
+                        editPublishError.text(errors.published_at[0]).removeClass('hidden');
                     }
 
                     if (response.responseJSON.error) {
-                        errorMessage.text(response.responseJSON.error).removeClass(
-                            'hidden');
+                        errorMessage.text(response.responseJSON.error).removeClass('hidden');
                     }
                 }
             });
@@ -411,11 +418,24 @@
                         .then(response => response.json())
                         .then(data => {
                             if (data.success) {
-                                const bookRow = document.querySelector(
-                                    `#book-${bookId}`);
+                                const bookRow = document.querySelector(`#book-${bookId}`);
+
                                 if (bookRow) {
                                     bookRow.remove();
                                 }
+
+                                const remainingRows = document.querySelectorAll('#author_table tbody tr');
+
+                                if (remainingRows.length === 0) {
+                                    const emptyRow = `
+                                        <tr>
+                                            <td colspan="6" class="text-center italic">Data buku kosong!</td>
+                                        </tr>
+                                    `;
+
+                                    $('#book_table tbody').append(emptyRow);
+                                }
+
                                 alert('Buku berhasil dihapus');
                             } else {
                                 alert('Gagal menghapus buku');
